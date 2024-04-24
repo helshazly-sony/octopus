@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "data-platform-client"
+version = "0.1.0"
+description = "Client used to send requests to the Data Platform Server"
+authors = ["helshazly-sony <Hatem.ElShazly@sony.com>"]
+readme = "README.md"
+packages = [
+   { include = "src" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+requests = "^2.31.0"
+pyarrow = "^15.0.2"
+pyopenssl = "^24.1.0"
+ndg-httpsclient = "^0.5.1"
+pyasn1 = "^0.6.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

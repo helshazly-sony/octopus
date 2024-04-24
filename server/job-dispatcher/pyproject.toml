@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "job-dispatcher"
+version = "0.1.0"
+description = "Dispatch PySpark Jobs"
+authors = ["Hatem ElShazly <hatem.elshazly@sony.com>"]
+readme = "README.md"
+packages = [
+   { include = "job-dispatcher" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+sqlalchemy = "^2.0.29"
+pydantic = "^2.6.4"
+fastapi = "^0.110.1"
+uvicorn = "^0.29.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
