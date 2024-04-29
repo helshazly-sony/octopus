@@ -1,7 +1,7 @@
 from src.core.execution import Execution
 from src.core.service import send_post_request
 
-class DataPlatformClient:
+class OctopusClient:
     def __init__(self, host, port, username, password):
         self.host = host
         self.port = port 
