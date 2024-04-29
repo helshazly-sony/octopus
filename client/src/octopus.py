@@ -1,5 +1,5 @@
-from src.core.execution import Execution
-from src.core.service import send_post_request
+from core.execution import Execution
+from core.service import send_post_request
 
 class OctopusClient:
     def __init__(self, host, port, username, password):
