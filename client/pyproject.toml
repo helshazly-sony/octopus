@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "data-platform-client"
+name = "octopus-client"
 version = "0.1.0"
-description = "Client used to send requests to the Data Platform Server"
+description = "Octopus Client used to send execution requests, monitor executions, and retrieve the results from the Octopus Server"
 authors = ["helshazly-sony <Hatem.ElShazly@sony.com>"]
 readme = "README.md"
 packages = [
