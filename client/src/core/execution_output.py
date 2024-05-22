@@ -33,7 +33,9 @@ class ExecutionOutput:
        e = self.endpoints[self.index]
        flight_reader = self.client.do_get(e.ticket)
        table = flight_reader.read_all()
-       
+      
+       self.index += 1
+ 
        return table
 
    def fetch_all(self):

@@ -15,6 +15,7 @@ def create_execution_record(db: Session, request: QueryExecutionRequest):
                                           spark_app_state = -2, \
                                           spark_app_id = None, \
                                           flight_description = None, \
+                                          spark_app_log_path = None, \
                                           timestamp = datetime.now())
 
     db.add(db_execution_record)

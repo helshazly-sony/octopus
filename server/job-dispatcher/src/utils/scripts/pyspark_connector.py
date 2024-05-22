@@ -89,8 +89,8 @@ if __name__ == "__main__":
                            int(args.execution_record_id), \
                            spark._sc.applicationId)
 
-       df = test(int(args.num_partitions))
-       #df = execute_query(spark, args)
+       #df = test(int(args.num_partitions))
+       df = execute_query(spark, args)
        
        #Add Flight Description to DB
        flight_description = "flight_" + spark._sc.applicationId
