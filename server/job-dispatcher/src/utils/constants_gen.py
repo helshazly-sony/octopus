@@ -27,7 +27,7 @@ class Constants():
     NEO4J_SPARK_CONN_JAR = os.path.join(JARS_PATH, \"neo4j-connector-apache-spark_2.12-5.2.0_for_spark_3.jar\")
     FLIGHT_CORE_JAR = os.path.join(JARS_PATH, \"flight-core-16.0.0-SNAPSHOT-shaded-ext.jar\")
     FLIGHT_CORE_JAR_W_DEP_JAR = os.path.join(JARS_PATH, \"flight-core-16.0.0-SNAPSHOT-jar-with-dependencies.jar\")
-    SPARK_ARROW_CONN_JAR = os.path.join(JARS_PATH, \"data-platform-server-1.0.0-SNAPSHOT-jar-with-dependencies.jar\")
+    SPARK_ARROW_CONN_JAR = os.path.join(JARS_PATH, \"octopus-server-1.0.0-SNAPSHOT-jar-with-dependencies.jar\")
     
     # For Testing
     NEO4J_JAR = os.path.join(\"{3}\", NEO4J_SPARK_CONN_JAR)
