@@ -11,7 +11,7 @@ class Constants():
     SPARK_DRIVER_MEMORY = "spark.driver.memory=150g"
     SPARK_DRIVER_MAX_RESULT_SIZE = "spark.driver.maxResultSize=150g"
 
-    ROOT_DIR = "/usr/bin/data-platform/server/services/data-platform-server/job-dispatcher/src"
+    ROOT_DIR = "/opt/octopus/server/job-dispatcher/src"
     PYSPARK_SCRIPT_PATH = os.path.join(ROOT_DIR, "utils/scripts/pyspark_connector.py")
     PY_CRUD_PATH = os.path.join(ROOT_DIR, "model/crud.py")
     PY_DB_PATH = os.path.join(ROOT_DIR, "model/database.py")
@@ -20,7 +20,7 @@ class Constants():
                 PY_DB_PATH, \
                 PY_CONSTANTS_PATH]
 
-    JARS_PATH = "/usr/bin/data-platform/server/services/data-platform-server/artifacts"
+    JARS_PATH = "/opt/octopus/server/artifacts"
     NEO4J_SPARK_CONN_JAR = os.path.join(JARS_PATH, "neo4j-connector-apache-spark_2.12-5.2.0_for_spark_3.jar")
     FLIGHT_CORE_JAR = os.path.join(JARS_PATH, "flight-core-16.0.0-SNAPSHOT-shaded-ext.jar")
     FLIGHT_CORE_JAR_W_DEP_JAR = os.path.join(JARS_PATH, "flight-core-16.0.0-SNAPSHOT-jar-with-dependencies.jar")
@@ -35,8 +35,8 @@ class Constants():
             SPARK_ARROW_CONN_JAR]
 
     # FLIGHT ARROW
-    SPARK_ARROW_PATH = "/usr/bin/data-platform/server/services/data-platform-server/job-dispatcher/src" + "/../../data-transfer/src/main/python"
-    HOST = "localhost"
+    SPARK_ARROW_PATH = "/opt/octopus/server/job-dispatcher/src" + "/../../data-transfer/src/main/python"
+    HOST = "arrow-flight-server"
     PORT = "8888"
 
     # NEO4J
@@ -46,11 +46,12 @@ class Constants():
     METADATA_DB = os.path.join("/tmp/", "metadata.db")
 
     # LOGGING
-    LOG_FILE_PATH = os.path.join("/tmp/", "data-platform-server.log")
+    LOG_FILE_PATH = os.path.join("/tmp/", "octopus-server.log")
     SPARK_APP_LOG_PATH = os.path.join("/tmp/", "spark-logs")
 
     # SPARK APP STATUS
-    STATE = {"RUNNING":-1, \
+    STATE = {"STAGED":-2, \
+             "RUNNING":-1, \
              "SUCCESS":0, \
              "FAIL":1}
    
