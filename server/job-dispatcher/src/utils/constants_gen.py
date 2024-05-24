@@ -39,7 +39,7 @@ class Constants():
 
     # FLIGHT ARROW
     SPARK_ARROW_PATH = \"{1}\" + \"/../../data-transfer/src/main/python\"
-    HOST = \"localhost\"
+    HOST = \"arrow-flight-server\"
     PORT = \"8888\"
 
     # NEO4J
