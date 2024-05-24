@@ -49,7 +49,7 @@ class Constants():
     METADATA_DB = os.path.join("{4}", \"metadata.db\")
 
     # LOGGING
-    LOG_FILE_PATH = os.path.join("{4}", \"data-platform-server.log\")
+    LOG_FILE_PATH = os.path.join("{4}", \"octopus-server.log\")
     SPARK_APP_LOG_PATH = os.path.join("{4}", "spark-logs")
 """
 
