@@ -33,7 +33,8 @@ class Execution:
           raise Exception("Fatal! Execution {0} has None state!".format(self.id)) 
        if self.state == 0:
           self.flight_description = response_json["flight-description"]
-          self.output = ExecutionOutput(self.host, self.flight_description)
+          flight_container_hostname = "arrow-flight-server"
+          self.output = ExecutionOutput(flight_container_hostname, self.flight_description)
 
        self.last_status_check_time = current_time
   
