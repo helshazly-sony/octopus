@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   spark-neo4j:
-    image: shazly/neo4j-spark:5.12.0
+    image: shazly/neo4spark-server:v1
     container_name: spark-neo4j-server
     ports:
       - "8000:8000" # Job Dispatcher Server
@@ -12,12 +12,12 @@ services:
       - "7687:7687"  # Neo4j Bolt port
     networks:
       - app-network
-    volumes: # Mounts database and important directories from guest to host
+    volumes:
       - /home/jihun.a.choi/neo4j_data:/var/lib/neo4j/data
       - /neo4j-host/import:/var/lib/neo4j/import
       - /neo4j-host/plugins:/var/lib/neo4j/plugins
-      - /neo4j-host/eval/octopus/:/opt/octopus/
-      - /home/hatem.elshaly/eval/job-dispatcher-logs:/tmp/
+      - /neo4j-host/eval/octopus:/opt/octopus
+      - /neo4j-host/eval/job-dispatcher-logs:/tmp/
     environment:
       NEO4J_apoc_export_file_enabled: ´true´
       NEO4J_apoc_import_file_enabled: ´true´
@@ -37,9 +37,9 @@ services:
       - "8888:8888"  # Adjust this port based on your Arrow Flight setup
     networks:
       - app-network
-    volumes: # Mount Octopus repo and flight-logs dir
+    volumes:
       - /home/hatem.elshazly/eval/flight-logs/:/tmp/ 
-      - /home/hatem.elshazly/eval/octopus/:/opt/octopus/
+      - /home/hatem.elshazly/eval/octopus:/opt/octopus
     depends_on:
       - spark-neo4j
 

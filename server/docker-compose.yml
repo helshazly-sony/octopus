@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   spark-neo4j:
-    image: shazly/neo4j-spark:5.12.0
+    image: shazly/neo4jspark-server:v1
     container_name: spark-neo4j-server
     ports:
       - "8000:8000" # Job Dispatcher Server
