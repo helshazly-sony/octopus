@@ -13,6 +13,8 @@ services:
     networks:
       - app-network
     volumes: # Good to mount neo4j important dirs (e.g. plugins, data, logs) to host directories
+      # - <path-to-octopus-repo-host>:/opt/octopus
+      # - <path-to-job-dispatcher-server-logs>:/tmp/
     environment:
       NEO4J_apoc_export_file_enabled: ´true´
       NEO4J_apoc_import_file_enabled: ´true´
@@ -33,6 +35,8 @@ services:
     networks:
       - app-network
     volumes: # Good to mount flight-server logs directory to host
+      # - <path-to-octopus-repo-host>:/opt/octopus
+      # - <path-to-flight-logs>:/tmp/flight-logs/
     depends_on:
       - spark-neo4j
 

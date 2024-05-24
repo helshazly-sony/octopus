@@ -12,11 +12,12 @@ services:
       - "7687:7687"  # Neo4j Bolt port
     networks:
       - app-network
-    volumes: # Mounts database to host
+    volumes: # Mounts database and important directories from guest to host
       - /home/jihun.a.choi/neo4j_data:/var/lib/neo4j/data
       - /neo4j-host/import:/var/lib/neo4j/import
       - /neo4j-host/plugins:/var/lib/neo4j/plugins
-      - /neo4j-host/eval:/root/eval/
+      - /neo4j-host/eval/octopus/:/opt/octopus/
+      - /home/hatem.elshaly/eval/job-dispatcher-logs:/tmp/
     environment:
       NEO4J_apoc_export_file_enabled: ´true´
       NEO4J_apoc_import_file_enabled: ´true´
@@ -36,8 +37,9 @@ services:
       - "8888:8888"  # Adjust this port based on your Arrow Flight setup
     networks:
       - app-network
-    volumes: # Mount flight-logs dir to host
-      - /home/hatem.elshazly/flight-logs/:/tmp/ 
+    volumes: # Mount Octopus repo and flight-logs dir
+      - /home/hatem.elshazly/eval/flight-logs/:/tmp/ 
+      - /home/hatem.elshazly/eval/octopus/:/opt/octopus/
     depends_on:
       - spark-neo4j
 
