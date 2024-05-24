@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  spark-neo4j:
+    image: shazly/neo4j-spark:5.12.0
+    container_name: spark-neo4j-server
+    ports:
+      - "8000:8000" # Job Dispatcher Server
+      - "18080:18080" # Spark History Server
+      - "4040:4040"  # Adjust this port based on your Spark setup
+      - "7474:7474"  # Neo4j HTTP port
+      - "7687:7687"  # Neo4j Bolt port
+    networks:
+      - app-network
+    volumes: # Mounts database to host
+      - /home/jihun.a.choi/neo4j_data:/var/lib/neo4j/data
+      - /neo4j-host/import:/var/lib/neo4j/import
+      - /neo4j-host/plugins:/var/lib/neo4j/plugins
+      - /neo4j-host/eval:/root/eval/
+    environment:
+      NEO4J_apoc_export_file_enabled: ´true´
+      NEO4J_apoc_import_file_enabled: ´true´
+      NEO4J_apoc_import_file_use__neo4j__config: ´true´
+      NEO4J_PLUGINS: ´["apoc-extended"]´
+
+      NEO4J_AUTH: neo4j/password
+      NEO4J_memory_heap_initial/_size: 31G
+      NEO4J_memory_heap_max/_size: 31G
+      NEO4J_server_memory_pagecache_size: 320G
+
+  arrow-flight:
+    image: shazly/arrow-flight-spark:v1
+    container_name: arrow-flight-server
+    tty: true
+    ports:
+      - "8888:8888"  # Adjust this port based on your Arrow Flight setup
+    networks:
+      - app-network
+    volumes: # Mount flight-logs dir to host
+      - /home/hatem.elshazly/flight-logs/:/tmp/ 
+    depends_on:
+      - spark-neo4j
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  spark_data:
+  neo4j_data:
+  neo4j_logs:
+
