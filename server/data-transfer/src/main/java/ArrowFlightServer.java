@@ -60,14 +60,18 @@ public class ArrowFlightServer implements FlightProducer, AutoCloseable {
 	 * Returns the appropriate stream given the ticket (streams are indexed by path and an ordinal).
 	 */
 	public Stream getStream(Ticket t) {
-		StreamTicket example = StreamTicket.from(t);
-		FlightDescriptor d = FlightDescriptor.path(example.getPath());
-		Dataset ds = datasets.get(d);
+		StreamTicket st = StreamTicket.from(t);
+		FlightDescriptor d = FlightDescriptor.path(st.getPath());
+		if (!datasets.containsKey(d)) {
+			throw new IllegalStateException("Unknown ticket. Entry does not exist!");
+		}
+		// Delete the entry after consuming it.
+		Dataset ds = datasets.remove(d);
 		if (ds == null) {
-			throw new IllegalStateException("Unknown ticket.");
+			throw new IllegalStateException("Object is null! Was it already removed?");
 		}
 
-		return ds.getStream(example);
+		return ds.getStream(st);
 	}
 
 	@Override
