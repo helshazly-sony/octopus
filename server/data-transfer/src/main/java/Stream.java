@@ -94,7 +94,7 @@ public class Stream implements AutoCloseable, Iterable<ArrowRecordBatch> {
 	 */
 	public void verify(StreamTicket ticket) {
 		if (!uuid.equals(ticket.getUuid())) {
-			throw new IllegalStateException("Ticket doesn't match.");
+			throw new IllegalStateException("Ticket does not match.");
 		}
 	}
 

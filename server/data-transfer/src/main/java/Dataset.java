@@ -4,7 +4,10 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import org.apache.arrow.flight.FlightDescriptor;
@@ -30,12 +33,17 @@ public class Dataset implements AutoCloseable {
 	private final BufferAllocator allocator;
 	private final FlightDescriptor descriptor;
 	private final Schema schema;
-	private final List<Stream> streams = new CopyOnWriteArrayList<>();
+	//private final List<Stream> streams = new CopyOnWriteArrayList<>();
+	private final ConcurrentMap<Integer, Stream> streams = new ConcurrentHashMap<>();
+	// Atomic counter for ordinals
+    private final AtomicInteger ordinalGenerator = new AtomicInteger(0); 
 	private final DictionaryProvider dictionaryProvider;
+	
 
 	/**
 	 * Creates a new instance.
-	 *  @param allocator The allocator to use for allocating buffers to store data.
+	 * 
+	 * @param allocator The allocator to use for allocating buffers to store data.
 	 * @param descriptor The descriptor for the streams.
 	 * @param schema  The schema for the stream.
 	 * @param dictionaryProvider The dictionary provider for the stream.
@@ -56,6 +64,7 @@ public class Dataset implements AutoCloseable {
 		Preconditions.checkArgument(ticket.getOrdinal() < streams.size(), "Unknown stream.");
 		Stream stream = streams.get(ticket.getOrdinal());
 		stream.verify(ticket);
+				
 		return stream;
 	}
 
@@ -65,9 +74,7 @@ public class Dataset implements AutoCloseable {
 	public Stream.StreamCreator addStream(Schema schema) {
 		Preconditions.checkArgument(this.schema.equals(schema), "Stream schema inconsistent with existing schema.");
 		return new Stream.StreamCreator(schema, dictionaryProvider, allocator, t -> {
-			synchronized (streams) {
-				streams.add(t);
-			}
+			streams.put(ordinalGenerator.getAndIncrement(), t);
 		});
 	}
 
@@ -76,15 +83,14 @@ public class Dataset implements AutoCloseable {
 	 */
 	public FlightInfo getFlightInfo(final Location l) {
 		final long bytes = allocator.getAllocatedMemory();
-		final long records = streams.stream().collect(Collectors.summingLong(t -> t.getRecordCount()));
+		final long records = streams.values().stream().collect(Collectors.summingLong(t -> t.getRecordCount()));
 
 		final List<FlightEndpoint> endpoints = new ArrayList<>();
 		int i = 0;
-		for (Stream s : streams) {
+		for (Stream s : streams.values()) {
 			endpoints.add(
 					new FlightEndpoint(
-							new StreamTicket(descriptor.getPath(), i, s.getUuid())
-							.toTicket(),
+							new StreamTicket(descriptor.getPath(), i, s.getUuid()).toTicket(),
 							l));
 			i++;
 		}
@@ -109,6 +115,6 @@ public class Dataset implements AutoCloseable {
 		final Iterable<AutoCloseable> dictionaries = dictionaryIds.stream()
 				.map(id -> (AutoCloseable) dictionaryProvider.lookup(id).getVector())::iterator;
 
-		AutoCloseables.close(Iterables.concat(streams, ImmutableList.of(allocator), dictionaries));
+		AutoCloseables.close(Iterables.concat(streams.values(), ImmutableList.of(allocator), dictionaries));
 	}
 }
