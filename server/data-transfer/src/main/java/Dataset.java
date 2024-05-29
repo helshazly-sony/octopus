@@ -62,7 +62,7 @@ public class Dataset implements AutoCloseable {
 	 */
 	public Stream getStream(StreamTicket ticket) {
 		Preconditions.checkArgument(ticket.getOrdinal() < streams.size(), "Unknown stream.");
-		Stream stream = streams.get(ticket.getOrdinal());
+		Stream stream = streams.remove(ticket.getOrdinal());
 		stream.verify(ticket);
 				
 		return stream;
