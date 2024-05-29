@@ -61,8 +61,13 @@ public class Dataset implements AutoCloseable {
 	 * Returns the stream based on the ordinal of StreamTicket.
 	 */
 	public Stream getStream(StreamTicket ticket) {
-		Preconditions.checkArgument(ticket.getOrdinal() < streams.size(), "Unknown stream.");
+		//Preconditions.checkArgument(ticket.getOrdinal() < streams.size(), "Unknown stream.");
+		//System.out.println("Getting " + ticket.getOrdinal());
+		//Stream stream = streams.get(ticket.getOrdinal());
+		System.out.println("Removing " + ticket.getOrdinal());
 		Stream stream = streams.remove(ticket.getOrdinal());
+		System.out.println("Size = " + streams.size());
+		System.out.println(String.join(" ", streams.keySet().toString()));
 		stream.verify(ticket);
 				
 		return stream;
@@ -74,6 +79,7 @@ public class Dataset implements AutoCloseable {
 	public Stream.StreamCreator addStream(Schema schema) {
 		Preconditions.checkArgument(this.schema.equals(schema), "Stream schema inconsistent with existing schema.");
 		return new Stream.StreamCreator(schema, dictionaryProvider, allocator, t -> {
+                        System.out.println("Putting " + ordinalGenerator.get());
 			streams.put(ordinalGenerator.getAndIncrement(), t);
 		});
 	}
@@ -116,5 +122,9 @@ public class Dataset implements AutoCloseable {
 				.map(id -> (AutoCloseable) dictionaryProvider.lookup(id).getVector())::iterator;
 
 		AutoCloseables.close(Iterables.concat(streams.values(), ImmutableList.of(allocator), dictionaries));
+	}
+
+	public boolean isEmpty() {
+		return this.streams.isEmpty();
 	}
 }

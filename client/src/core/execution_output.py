@@ -31,10 +31,9 @@ class ExecutionOutput:
            return None
 
        e = self.endpoints[self.index]
+       print(e.ticket)
        flight_reader = self.client.do_get(e.ticket)
        table = flight_reader.read_all()
-      
-       self.index += 1
  
        return table
 

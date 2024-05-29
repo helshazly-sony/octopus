@@ -60,6 +60,7 @@ public class ArrowFlightServer implements FlightProducer, AutoCloseable {
 	 * Returns the appropriate stream given the ticket (streams are indexed by path and an ordinal).
 	 */
 	public Stream getStream(Ticket t) {
+	        System.out.println("hahaha");
 		StreamTicket st = StreamTicket.from(t);
 		FlightDescriptor d = FlightDescriptor.path(st.getPath());
 
@@ -67,8 +68,16 @@ public class ArrowFlightServer implements FlightProducer, AutoCloseable {
 		if (ds == null) {
 			throw new IllegalStateException("Unknown Ticket!");
 		}
-
-		return ds.getStream(st);
+                 
+		System.out.println(d.toString());
+		System.out.println(st.getOrdinal());
+		Stream stream = ds.getStream(st);
+                System.out.println("lol");
+                if(ds.isEmpty()){
+		   ds.close();
+		   datasets.remove(d);
+		}
+		return stream;
 	}
 
 	@Override
