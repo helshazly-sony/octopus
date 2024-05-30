@@ -3,6 +3,9 @@ package main.java;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+
 import org.apache.arrow.flight.Action;
 import org.apache.arrow.flight.ActionType;
 import org.apache.arrow.flight.CallStatus;
@@ -63,6 +66,7 @@ public class ArrowFlightServer implements FlightProducer, AutoCloseable {
 	        System.out.println("hahaha");
 		StreamTicket st = StreamTicket.from(t);
 		FlightDescriptor d = FlightDescriptor.path(st.getPath());
+		System.out.println(d.toString());
 
 		Dataset ds = datasets.get(d);
 		if (ds == null) {
@@ -73,10 +77,6 @@ public class ArrowFlightServer implements FlightProducer, AutoCloseable {
 		System.out.println(st.getOrdinal());
 		Stream stream = ds.getStream(st);
                 System.out.println("lol");
-                if(ds.isEmpty()){
-		   ds.close();
-		   datasets.remove(d);
-		}
 		return stream;
 	}
 
@@ -140,7 +140,20 @@ public class ArrowFlightServer implements FlightProducer, AutoCloseable {
 		switch (action.getType()) {
 		case "drop": {
 			// not implemented.
-			listener.onNext(new Result(new byte[0]));
+			ByteBuffer byteBuffer = ByteBuffer.wrap(action.getBody());
+			int ordinal = byteBuffer.getInt();
+	        byte[] descriptionBytes = new byte[byteBuffer.remaining()];
+	        byteBuffer.get(descriptionBytes);
+	        String flightDescription = new String(descriptionBytes);
+			
+	        byte[] result;
+	        if(dropStream(flightDescription, ordinal)) {
+	        	result = "Action executed successfully!".getBytes();
+	        } else {
+	        	result = "Failure!".getBytes();
+	        }
+	        
+			listener.onNext(new Result(result));
 			listener.onCompleted();
 			break;
 		}
@@ -148,6 +161,33 @@ public class ArrowFlightServer implements FlightProducer, AutoCloseable {
 			listener.onError(CallStatus.UNIMPLEMENTED.toRuntimeException());
 		}
 		}
+	}
+
+	public boolean dropStream(String fd, int ordinal) {
+                ArrayList<String> paths = new ArrayList<String>();
+        	paths.add(fd);
+		FlightDescriptor d = FlightDescriptor.path(paths);
+		System.out.println("Ordinal: " + ordinal);
+		System.out.println("Closing stream of " + fd);
+		try{
+		   try(Dataset ds = datasets.remove(d)) {
+		      ds.close();
+	           }
+		} catch(Exception e){
+		  System.out.println(e);
+		  return false;
+		}
+
+		try{
+		   allocator.close();
+                   this.close();
+		} catch (Exception e){
+		   System.out.println("ho");
+		   System.out.println(e);
+		}
+                paths.clear();
+        
+		return true;
 	}
 
 	@Override

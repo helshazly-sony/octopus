@@ -65,7 +65,14 @@ public class Dataset implements AutoCloseable {
 		//System.out.println("Getting " + ticket.getOrdinal());
 		//Stream stream = streams.get(ticket.getOrdinal());
 		System.out.println("Removing " + ticket.getOrdinal());
-		Stream stream = streams.remove(ticket.getOrdinal());
+		Stream stream = streams.get(ticket.getOrdinal());
+		try{
+		   if (ticket.getOrdinal() > 0) {
+			streams.remove(ticket.getOrdinal()-1).close();
+		   }
+		} catch (Exception e) {
+			System.out.println("closing: " + e);
+		}
 		System.out.println("Size = " + streams.size());
 		System.out.println(String.join(" ", streams.keySet().toString()));
 		stream.verify(ticket);
