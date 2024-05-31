@@ -25,6 +25,8 @@ import org.apache.arrow.vector.util.DictionaryUtility;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
+import main.java.StreamTicket;
+
 /**
  * A logical collection of streams sharing the same schema.
  */
@@ -61,18 +63,9 @@ public class Dataset implements AutoCloseable {
 	 * Returns the stream based on the ordinal of StreamTicket.
 	 */
 	public Stream getStream(StreamTicket ticket) {
-		//Preconditions.checkArgument(ticket.getOrdinal() < streams.size(), "Unknown stream.");
-		//System.out.println("Getting " + ticket.getOrdinal());
-		//Stream stream = streams.get(ticket.getOrdinal());
-		System.out.println("Removing " + ticket.getOrdinal());
+		System.out.println("Getting Stream " + ticket.getOrdinal());
+		
 		Stream stream = streams.get(ticket.getOrdinal());
-		try{
-		   if (ticket.getOrdinal() > 0) {
-			streams.remove(ticket.getOrdinal()-1).close();
-		   }
-		} catch (Exception e) {
-			System.out.println("closing: " + e);
-		}
 		System.out.println("Size = " + streams.size());
 		System.out.println(String.join(" ", streams.keySet().toString()));
 		stream.verify(ticket);
@@ -80,6 +73,34 @@ public class Dataset implements AutoCloseable {
 		return stream;
 	}
 
+	/**
+	 * Closes a specific stream.
+	 * 
+	 * @param ticket
+	 * @return True if the stream is successfully closed, False otherwise.
+	 */
+	public boolean closeStream(StreamTicket ticket) {
+		System.out.println("Closing Stream " + ticket.getOrdinal());
+		
+		try(Stream stream = streams.remove(ticket.getOrdinal())){
+			stream.close();
+		} catch(Exception e) {
+			System.out.println("Error Closing Stream: " + e);
+			return false;
+		}
+		
+		return true;
+	}
+	
+	/**
+	 * Checks whether there are no more streams.
+	 * 
+	 * @return True if streams are empty, False otherwiese.
+	 */
+	public boolean isEmpty() {
+		return this.streams.isEmpty();
+	}
+	
 	/**
 	 * Adds a new streams which clients can populate via the returned object.
 	 */
@@ -129,9 +150,5 @@ public class Dataset implements AutoCloseable {
 				.map(id -> (AutoCloseable) dictionaryProvider.lookup(id).getVector())::iterator;
 
 		AutoCloseables.close(Iterables.concat(streams.values(), ImmutableList.of(allocator), dictionaries));
-	}
-
-	public boolean isEmpty() {
-		return this.streams.isEmpty();
 	}
 }

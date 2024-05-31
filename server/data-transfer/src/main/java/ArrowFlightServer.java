@@ -23,6 +23,8 @@ import org.apache.arrow.util.AutoCloseables;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.VectorUnloader;
 
+import main.java.StreamTicket;
+
 /**
  * A FlightProducer that hosts an in memory store of Arrow buffers.
  */
@@ -135,19 +137,15 @@ public class ArrowFlightServer implements FlightProducer, AutoCloseable {
 	}
 
 	@Override
-	public void doAction(CallContext context, Action action,
-			StreamListener<Result> listener) {
+	public void doAction(CallContext context, Action action, StreamListener<Result> listener) {
 		switch (action.getType()) {
 		case "drop": {
-			// not implemented.
-			ByteBuffer byteBuffer = ByteBuffer.wrap(action.getBody());
-			int ordinal = byteBuffer.getInt();
-	        byte[] descriptionBytes = new byte[byteBuffer.remaining()];
-	        byteBuffer.get(descriptionBytes);
-	        String flightDescription = new String(descriptionBytes);
+			byte[] ticketBody = action.getBody();
+			Ticket t = new Ticket(ticketBody);
+			StreamTicket st = StreamTicket.from(t);
 			
 	        byte[] result;
-	        if(dropStream(flightDescription, ordinal)) {
+	        if(dropStream(st)) {
 	        	result = "Action executed successfully!".getBytes();
 	        } else {
 	        	result = "Failure!".getBytes();
@@ -163,31 +161,35 @@ public class ArrowFlightServer implements FlightProducer, AutoCloseable {
 		}
 	}
 
-	public boolean dropStream(String fd, int ordinal) {
-                ArrayList<String> paths = new ArrayList<String>();
-        	paths.add(fd);
-		FlightDescriptor d = FlightDescriptor.path(paths);
-		System.out.println("Ordinal: " + ordinal);
-		System.out.println("Closing stream of " + fd);
-		try{
-		   try(Dataset ds = datasets.remove(d)) {
-		      ds.close();
-	           }
-		} catch(Exception e){
-		  System.out.println(e);
-		  return false;
+	/**
+	 * Drops a stream after consumption.
+	 * 
+	 * @param st StreamTicket of the stream to close. 
+	 * @return True if the stream was successfully closed, False otherwise.
+	 */
+	public boolean dropStream(StreamTicket st) {
+		FlightDescriptor d = FlightDescriptor.path(st.getPath());
+		Dataset ds = datasets.get(d);
+		if (ds == null) {
+			throw new IllegalStateException("Unknown Ticket!");
 		}
-
-		try{
-		   allocator.close();
-                   this.close();
-		} catch (Exception e){
-		   System.out.println("ho");
-		   System.out.println(e);
+                 
+		System.out.println("Removing stream: " + st.getOrdinal());
+		boolean isClosed = ds.closeStream(st);
+		
+		// If dataset is empty, release its resources.
+		if (ds.isEmpty()) {
+			try {
+				ds.close();
+			} catch(Exception e) {
+				System.out.println("Error closing dataset: " + e);
+				return false;
+			}
 		}
-                paths.clear();
-        
-		return true;
+		
+        System.out.println("lol");
+                
+		return isClosed;
 	}
 
 	@Override
