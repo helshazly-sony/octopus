@@ -180,6 +180,7 @@ public class ArrowFlightServer implements FlightProducer, AutoCloseable {
 		// If dataset is empty, release its resources.
 		if (ds.isEmpty()) {
 			try {
+				System.out.println("Dataset is empty. Closing..");
 				ds.close();
 			} catch(Exception e) {
 				System.out.println("Error closing dataset: " + e);
