@@ -55,9 +55,9 @@ class ExecutionOutput:
        return self.tables
 
    def drop(self, partition_ticket):
-       drop_action = pyarrow.flight.Action("drop", partition_ticket)
+       drop_action = pa.flight.Action("drop", partition_ticket)
 
        # TODO: Improve Error Checking (Return Integer Flags Instead of Text)
        for response in self.client.do_action(drop_action):
-           if "Failure" in response.body.to_pybytes().decode("utf-8")):
+           if "Failure" in response.body.to_pybytes().decode("utf-8"):
                return 1 
