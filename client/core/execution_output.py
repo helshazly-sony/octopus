@@ -44,9 +44,10 @@ class ExecutionOutput:
            return self.tables
 
        self.tables = []
-       for e in self.endpoints:
+       for e in self.endpoints[self.index:]:
            flight_reader = self.client.do_get(e.ticket)
            table = flight_reader.read_all()
+           self.index += 1
            # Remove parition from the server after consumption
            self.drop(e.ticket.ticket)           
    
@@ -60,4 +61,5 @@ class ExecutionOutput:
        # TODO: Improve Error Checking (Return Integer Flags Instead of Text)
        for response in self.client.do_action(drop_action):
            if "Failure" in response.body.to_pybytes().decode("utf-8"):
+               print("Warning! Failed to remove partition from the server") 
                return 1 

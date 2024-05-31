@@ -5,7 +5,7 @@ description = "Octopus Client used to send execution requests, monitor execution
 authors = ["helshazly-sony <Hatem.ElShazly@sony.com>"]
 readme = "README.md"
 packages = [
-   { include = "src" }
+   { include = "." }
 ]
 
 [tool.poetry.dependencies]

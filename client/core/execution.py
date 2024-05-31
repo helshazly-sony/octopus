@@ -1,5 +1,5 @@
-from src.core.service import send_get_request
-from src.core.execution_output import ExecutionOutput
+from core.service import send_get_request
+from core.execution_output import ExecutionOutput
 
 import time
 
