@@ -31,9 +31,11 @@ class ExecutionOutput:
            return None
 
        e = self.endpoints[self.index]
-       print(e.ticket)
        flight_reader = self.client.do_get(e.ticket)
        table = flight_reader.read_all()
+
+       # Remove partitions from the server
+       self.drop(e.ticket.ticket)
  
        return table
 
@@ -45,8 +47,17 @@ class ExecutionOutput:
        for e in self.endpoints:
            flight_reader = self.client.do_get(e.ticket)
            table = flight_reader.read_all()
-              
+           # Remove parition from the server after consumption
+           self.drop(e.ticket.ticket)           
+   
            self.tables.append(table)
 
        return self.tables
- 
+
+   def drop(self, partition_ticket):
+       drop_action = pyarrow.flight.Action("drop", partition_ticket)
+
+       # TODO: Improve Error Checking (Return Integer Flags Instead of Text)
+       for response in self.client.do_action(drop_action):
+           if "Failure" in response.body.to_pybytes().decode("utf-8")):
+               return 1 
