@@ -12,30 +12,28 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <scala.version>2.12.10</scala.version>
         <scala.binary.version>2.12</scala.binary.version>
-        <dep.arrow.version>2.0.0</dep.arrow.version>
-        <dep.spark.version>3.5.0</dep.spark.version>
+        <dep.arrow.version>14.0.2</dep.arrow.version>
+	<dep.spark.version>3.5.0</dep.spark.version>
+	<dep.netty.version>4.1.96.Final</dep.netty.version>
+	<dep.grpc.version>1.64.0</dep.grpc.version>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <dep.fbs.version>1.9.0</dep.fbs.version>
         <dep.flatc.version>1.9.0</dep.flatc.version>
     </properties>
 
-	<dependencyManagement>
-		<dependencies></dependencies>
-	</dependencyManagement>
-
 
     <dependencies>
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-databind</artifactId>
-			<version>2.12.1</version>
-		</dependency>
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-core</artifactId>
-			<version>2.12.1</version>
-		</dependency>
+	<dependency>
+		<groupId>com.fasterxml.jackson.core</groupId>
+		<artifactId>jackson-databind</artifactId>
+		<version>2.12.1</version>
+	</dependency>
+	<dependency>
+		<groupId>com.fasterxml.jackson.core</groupId>
+		<artifactId>jackson-core</artifactId>
+		<version>2.12.1</version>
+	</dependency>
 		
         <dependency>
             <groupId>org.scala-lang.modules</groupId>
@@ -48,6 +46,17 @@
             <artifactId>scala-compiler</artifactId>
             <version>${scala.version}</version>
         </dependency>
+
+	<dependency>
+    		<groupId>io.grpc</groupId>
+    		<artifactId>grpc-netty</artifactId>
+		<version>${dep.grpc.version}</version>
+	</dependency>
+	<dependency>
+    		<groupId>io.netty</groupId>
+    		<artifactId>netty-all</artifactId>
+		<version>${dep.netty.version}</version>
+	</dependency>
 
         <dependency>
             <groupId>org.scala-lang</groupId>
