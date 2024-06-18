@@ -2,10 +2,9 @@
 
 SPARK_TYPE=$1
 
-echo "$SPARK_TYPE"
+echo "Starting $SPARK_TYPE"
 
 if [ "$SPARK_TYPE" == "master" ]; then
-	service ssh start
 	start-master.sh
 	start-history-server.sh
 elif [ "$SPARK_TYPE" == "worker" ]; then

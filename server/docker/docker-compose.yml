@@ -37,7 +37,8 @@ services:
        - "18080:18080" # Spark History Server
        - "4040:4040"  # Adjust this port based on your Spark setup
        - "7077:7077" # Spark master
-       - "8081:8081" # Spark master webUI
+       - "8080:8080" # Spark Master webUI 
+       - "8081:8081" # Spark Worker webUI
        - "22:22"
      volumes:
       - /home/hshazly/workspace/logs/job-dispatcher/spark/:/opt/spark/logs/
