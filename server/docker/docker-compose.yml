@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   neo4j:
     image: neo4j:latest
@@ -30,7 +28,7 @@ services:
      build:
        context: .
        dockerfile: spark-server.Dockerfile
-     image: octopus-spark-image
+       target: spark-master
      entrypoint: ['./spark-entrypoint.sh', 'master']
      networks:
        - app-network
@@ -47,9 +45,11 @@ services:
 
   spark-worker:
      container_name: spark-worker-container
+     build:
+        dockerfile: spark-server.Dockerfile 
+        target: spark-worker
      depends_on: 
        - job-dispatcher
-     image: octopus-spark-image
      entrypoint: ['./spark-entrypoint.sh', 'worker']
      networks:
        - app-network
