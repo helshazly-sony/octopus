@@ -1,65 +1,69 @@
-# Use the official Neo4j image as the base image
-FROM neo4j:latest
+FROM python:3.10-bullseye as git
+
+RUN mkdir -p -m 0600 ~/.ssh && \
+    ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+WORKDIR /git
+RUN --mount=type=ssh,id=default git clone git@github.com:helshazly-sony/octopus.git
+
+FROM python:3.10-bullseye as arrow-flight-base
 
 # Install additional libraries
-# For example, installing curl and vim
 RUN apt-get update && apt-get install -y \
     curl \
     vim \
     lsof \
-    python3 \
-    python3-pip \
+    unzip \
+    rsync \
+    openjdk-17-jdk \
+    maven \
+    build-essential \
+    software-properties-common \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Create a soft link from python3 to python 
-RUN ln -s /usr/bin/python3 /usr/bin/python
-
-# Install Poetry
 RUN pip3 install poetry
 
-# Expose the necessary ports (7474: HTTP, 7687: Bolt)
-EXPOSE 7474 7687
+EXPOSE 8888
 
-# Optionally, you can specify a custom entrypoint or command
-# CMD ["neo4j"]
+ENV OCTOPUS_HOME="/home/octopus"
+ENV OCTOPUS_DATA_TRANSFER_HOME="${OCTOPUS_HOME}/server/data-transfer" 
+ENV OCTOPUS_ARROW_FLIGHT_LOGS="${OCTOPUS_HOME}/logs"
+ENV OCTOPUS_LIB_DIR="/var/octopus/lib"
+ENV OCTOPUS_ARROW_FLIGHT_LOGS="${OCTOPUS_HOME}/logs/"
+ENV ARROW_FLIGHT_SERVER="arrow-flight-server-container"
+ENV PATH="${OCTOPUS_LIB_DIR}":"${OCTOPUS_DATA_TRANSFER_HOME}/bin":$PATH
 
-# By default, the Neo4j image uses the following entrypoint
-# ENTRYPOINT ["tini", "-g", "--", "/docker-entrypoint.sh"]
-# CMD ["neo4j"]
+COPY arrow-entrypoint.sh .
 
-# Setup the directories for our Spark and Hadoop installations
-ENV SPARK_HOME=${SPARK_HOME:-"/opt/spark"}
-RUN mkdir -p ${SPARK_HOME} 
-RUN curl https://dlcdn.apache.org/spark/spark-3.5.1/spark-3.5.1-bin-hadoop3.tgz -o spark-3.5.1-bin-hadoop3.tgz \
- && tar xvzf spark-3.5.1-bin-hadoop3.tgz --directory /opt/spark --strip-components 1 \
- && rm -rf spark-3.5.1-bin-hadoop3.tgz
+RUN chmod +x ./arrow-entrypoint.sh
 
-# Add Spark bins to PATH
-ENV PATH=${SPARK_HOME}/bin/:${SPARK_HOME}/sbin:$PATH
+### Add non-root user
+RUN addgroup --gid 1000 octopus && \
+    adduser --uid 1000 --shell /bin/bash --system --gid 1000 octopus
 
-# Start Spark history server 
-RUN mkdir /tmp/spark-events
-RUN chmod -R 777 ${SPARK_HOME}
-#CMD ["bash", "-c", "$SPARK_HOME/sbin/start-history-server.sh"]
+### Create Octopus User
+RUN chown -R 1000:1000 $OCTOPUS_HOME && \
+    mkdir -p $OCTOPUS_LIB_DIR && \
+    mkdir -p $OCTOPUS_ARROW_FLIGHT_LOGS && \
+    chown -R 1000:1000 $OCTOPUS_LIB_DIR
 
-# NOTE: Octopus has the neo4j spark connector in $OCTOPUS_HOME/server/artifcats/
-# Clone and build Octopus 
-ENV OCTOPUS_HOME=${OCTOPUS_HOME:-"/opt/octopus"}
-COPY octopus $OCTOPUS_HOME
+RUN chown octopus:octopus /arrow-entrypoint.sh && \
+    chown -R octopus:octopus $OCTOPUS_ARROW_FLIGHT_LOGS
 
-ENV PATH=${OCTOPUS_HOME}/server/job-dispatcher/bin:$PATH
+WORKDIR $OCTOPUS_HOME
+USER 1000
 
-ADD "entrypoint.sh" /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-ENTRYPOINT ["/entrypoint.sh"]
-#WORKDIR ${OCTOPUS_HOME}/server/
-#RUN ./build.sh -s
+########################################
+### Arrow Flight Server
+########################################
+COPY --from=git --chown=1000 /git/octopus/server ${OCTOPUS_HOME}/server
 
-# Run Octopus Server
-#WORKDIR ${OCTOPUS_HOME}/server/job-dispatcher
-#RUN poetry install
-#RUN PATH=${OCTOPUS_HOME}/server/job-dispatcher/bin:$PATH
-#RUN start_job_dispatcher.sh
+WORKDIR $OCTOPUS_HOME/server/data-transfer/
+
+RUN touch ${OCTOPUS_ARROW_FLIGHT_LOGS}/container_blocker && \
+    ./build.sh
+
+ENTRYPOINT ["/arrow-entrypoint.sh"]
 
 
