@@ -22,7 +22,11 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# Install poetry
 RUN pip3 install poetry
+
+COPY conf/requirements.txt .
+RUN pip3 install -r requirements.txt 
 
 EXPOSE 8888
 
@@ -34,7 +38,7 @@ ENV OCTOPUS_ARROW_FLIGHT_LOGS="${OCTOPUS_HOME}/logs/"
 ENV ARROW_FLIGHT_SERVER="arrow-flight-server-container"
 ENV PATH="${OCTOPUS_LIB_DIR}":"${OCTOPUS_DATA_TRANSFER_HOME}/bin":$PATH
 
-COPY arrow-entrypoint.sh .
+COPY entrypoints/arrow-entrypoint.sh .
 
 RUN chmod +x ./arrow-entrypoint.sh
 

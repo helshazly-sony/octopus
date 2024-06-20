@@ -29,7 +29,7 @@ services:
        context: .
        ssh:
         - default
-       dockerfile: spark-server.Dockerfile
+       dockerfile: dockerfiles/spark-server.Dockerfile
        target: spark-master
      networks:
        - app-network
@@ -50,7 +50,7 @@ services:
      container_name: spark-worker-container
      build:
         context: .
-        dockerfile: spark-server.Dockerfile 
+        dockerfile: dockerfiles/spark-server.Dockerfile 
         target: spark-worker
      depends_on: 
        - job-dispatcher
@@ -63,7 +63,7 @@ services:
     container_name: arrow-flight-server-container
     build:
        context: .
-       dockerfile: flight-server.Dockerfile
+       dockerfile: dockerfiles/flight-server.Dockerfile
     networks:
       - app-network
     ports:
