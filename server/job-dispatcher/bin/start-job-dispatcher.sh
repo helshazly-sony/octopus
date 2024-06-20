@@ -11,8 +11,7 @@ cd "$JOB_DISPATCHER_DIR" || exit
 
 # Start the job dispatcher server and redirect stdout and stderr to the log file
 # Launch the server in the background
-poetry run uvicorn src.main:app --reload > "$LOG_FILE" 2>&1 & 
+poetry run uvicorn src.main:app --host 0.0.0.0 --reload >"$LOG_FILE" 2>&1 &
 
 # Print the log file location
-echo "Job dispatcher server started. Logs are being written to $LOG_FILE"
-
+echo "$LOG_FILE"
