@@ -40,7 +40,8 @@ ENV SPARK_MASTER_HOST job-dispatcher-container
 ENV SPARK_MASTER_PORT 7077
 ENV PYSPARK_PYTHON python3
 ENV PYTHON_PATH=$SPARK_HOME/python:$PYTHONPATH
-ENV OCTOPUS_HOME="/home/octopus"
+ENV OCTOPUS_USER_HOME="/home/octopus"
+ENV OCTOPUS_HOME="${OCTOPUS_USER_HOME}/octopus/"
 
 COPY spark-defaults.conf $SPARK_HOME/conf
 COPY spark-env.sh $SPARK_HOME/conf
@@ -58,7 +59,7 @@ RUN addgroup --gid 1000 octopus && \
     adduser --uid 1000 --shell /bin/bash --system --gid 1000 octopus
 RUN chown octopus:octopus /spark-entrypoint.sh
 USER 1000
-WORKDIR $OCTOPUS_HOME
+WORKDIR $OCTOPUS_USER_HOME
 ########################################
 ### SPARK MASTER
 ########################################
@@ -78,6 +79,18 @@ RUN chown octopus:octopus sched-tests
 # Spark history server 
 RUN mkdir /tmp/spark-events
 
+### Octopus Job Dispatcher
+# NOTE: Octopus has the neo4j spark connector in $OCTOPUS_HOME/server/artifcats/
+ENV PATH=${OCTOPUS_HOME}/server/job-dispatcher/bin:$PATH
+
+RUN mkdir -p -m 0600 ~/.ssh && \
+    ssh-keyscan github.com >> ~/.ssh/known_hosts
+RUN --mount=type=ssh,id=default git clone git@github.com:helshazly-sony/octopus.git 
+WORKDIR ${OCTOPUS_HOME}/server/
+RUN ./build.sh -s
+WORKDIR $OCTOPUS_HOME/server/job-dispatcher/
+RUN poetry install
+
 ENTRYPOINT ["/spark-entrypoint.sh", "master"]
 
 ########################################
@@ -90,24 +103,4 @@ FROM spark-base as spark-worker
 COPY --from=spark-master $OCTOPUS_HOME/.ssh/id_ed25519.pub $OCTOPUS_HOME/.ssh/authorized_keys
 
 ENTRYPOINT ["/spark-entrypoint.sh", "worker"]
-
-# NOTE: Octopus has the neo4j spark connector in $OCTOPUS_HOME/server/artifcats/
-# Clone and build Octopus 
-#ENV OCTOPUS_HOME=${OCTOPUS_HOME:-"/opt/octopus"}
-#COPY octopus $OCTOPUS_HOME
-
-#ENV PATH=${OCTOPUS_HOME}/server/job-dispatcher/bin:$PATH
-
-#ADD "entrypoint.sh" /entrypoint.sh
-#RUN chmod +x /entrypoint.sh
-#ENTRYPOINT ["/entrypoint.sh"]
-#WORKDIR ${OCTOPUS_HOME}/server/
-#RUN ./build.sh -s
-
-# Run Octopus Server
-#WORKDIR ${OCTOPUS_HOME}/server/job-dispatcher
-#RUN poetry install
-#RUN PATH=${OCTOPUS_HOME}/server/job-dispatcher/bin:$PATH
-#RUN start_job_dispatcher.sh
-
 

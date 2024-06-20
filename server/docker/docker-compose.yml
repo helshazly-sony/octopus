@@ -29,6 +29,8 @@ services:
        context: .
        dockerfile: spark-server.Dockerfile
        target: spark-master
+       ssh:
+        - default
      networks:
        - app-network
      ports:
@@ -42,6 +44,7 @@ services:
      volumes:
       - /home/hshazly/workspace/logs/job-dispatcher/spark/:/opt/spark/logs/
       - /home/hshazly/workspace/logs/job-dispatcher/:/tmp/
+      # - /home/hshazly/.ssh/:/opt/octopus_key/
 
   spark-worker:
      container_name: spark-worker-container
