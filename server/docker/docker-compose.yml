@@ -27,10 +27,10 @@ services:
      container_name: job-dispatcher-container
      build:
        context: .
-       dockerfile: spark-server.Dockerfile
-       target: spark-master
        ssh:
         - default
+       dockerfile: spark-server.Dockerfile
+       target: spark-master
      networks:
        - app-network
      ports:
@@ -49,6 +49,7 @@ services:
   spark-worker:
      container_name: spark-worker-container
      build:
+        context: .
         dockerfile: spark-server.Dockerfile 
         target: spark-worker
      depends_on: 
