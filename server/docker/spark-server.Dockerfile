@@ -1,3 +1,12 @@
+FROM python:3.10-bullseye as git
+
+RUN mkdir -p -m 0600 ~/.ssh && \
+    ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+WORKDIR /git
+RUN --mount=type=ssh,id=default git clone git@github.com:helshazly-sony/octopus.git
+
+
 FROM python:3.10-bullseye as spark-base
 
 # Install additional libraries
@@ -14,10 +23,6 @@ RUN apt-get update && apt-get install -y \
     #openssh-client \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
-
-### use hardened config for sshd
-COPY sshd_config /etc/ssh/sshd_config
-RUN mkdir -p /var/run/sshd
 
 # Install Poetry
 RUN pip3 install poetry
@@ -40,8 +45,7 @@ ENV SPARK_MASTER_HOST job-dispatcher-container
 ENV SPARK_MASTER_PORT 7077
 ENV PYSPARK_PYTHON python3
 ENV PYTHON_PATH=$SPARK_HOME/python:$PYTHONPATH
-ENV OCTOPUS_USER_HOME="/home/octopus"
-ENV OCTOPUS_HOME="${OCTOPUS_USER_HOME}/octopus/"
+ENV OCTOPUS_HOME="/home/octopus"
 
 COPY spark-defaults.conf $SPARK_HOME/conf
 COPY spark-env.sh $SPARK_HOME/conf
@@ -57,24 +61,34 @@ RUN chmod -R 777 ${SPARK_HOME} && \
 ### Add non-root user
 RUN addgroup --gid 1000 octopus && \
     adduser --uid 1000 --shell /bin/bash --system --gid 1000 octopus
+
+### Setup SSH bits
+RUN mkdir -p /var/run/sshd && \
+    mkdir -p $OCTOPUS_HOME/.ssh && \
+    chown -R 1000:1000 $OCTOPUS_HOME
+
 RUN chown octopus:octopus /spark-entrypoint.sh
+
+WORKDIR $OCTOPUS_HOME
 USER 1000
-WORKDIR $OCTOPUS_USER_HOME
+
+
+
 ########################################
 ### SPARK MASTER
 ########################################
 
 FROM spark-base as spark-master
 
-# TODO: switch to password-based ssh 
-RUN mkdir -p .ssh/ && \
-    ssh-keygen -t ed25519 -f .ssh/id_ed25519 -q -N "" && \
-    chmod 600 .ssh/id_ed25519 && \
-    chmod 644 .ssh/id_ed25519.pub
+# TODO: switch to password-based ssh
+RUN echo "StrictHostKeyChecking accept-new" > ~/.ssh/config && \
+    ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -q -N "" && \
+    chmod 600 ~/.ssh/id_ed25519 && \
+    chmod 644 ~/.ssh/id_ed25519.pub
 
-RUN mkdir sched-tests
-COPY sched-tests sched-tests
-RUN chown octopus:octopus sched-tests
+COPY --from=git --chown=1000 /git/octopus/server ${OCTOPUS_HOME}/server
+
+COPY --chown=1000 sched-tests ./sched-tests
 
 # Spark history server 
 RUN mkdir /tmp/spark-events
@@ -83,13 +97,12 @@ RUN mkdir /tmp/spark-events
 # NOTE: Octopus has the neo4j spark connector in $OCTOPUS_HOME/server/artifcats/
 ENV PATH=${OCTOPUS_HOME}/server/job-dispatcher/bin:$PATH
 
-RUN mkdir -p -m 0600 ~/.ssh && \
-    ssh-keyscan github.com >> ~/.ssh/known_hosts
-RUN --mount=type=ssh,id=default git clone git@github.com:helshazly-sony/octopus.git 
+
 WORKDIR ${OCTOPUS_HOME}/server/
-RUN ./build.sh -s
-WORKDIR $OCTOPUS_HOME/server/job-dispatcher/
-RUN poetry install
+
+RUN ./build.sh -s && \
+    poetry install --directory=job-dispatcher
+
 
 ENTRYPOINT ["/spark-entrypoint.sh", "master"]
 
@@ -100,7 +113,14 @@ ENTRYPOINT ["/spark-entrypoint.sh", "master"]
 FROM spark-base as spark-worker
 
 ### The only key which is authorized to connect is the master's key
-COPY --from=spark-master $OCTOPUS_HOME/.ssh/id_ed25519.pub $OCTOPUS_HOME/.ssh/authorized_keys
+
+### use hardened config for sshd
+COPY --chown=1000 sshd_config ./ssh/sshd_config
+RUN ssh-keygen -t ed25519 -f ~/ssh/ssh_host_ed25519_key -q -N ""
+
+
+
+COPY --from=spark-master /home/octopus/.ssh/id_ed25519.pub ${OCTOPUS_HOME}/.ssh/authorized_keys
 
 ENTRYPOINT ["/spark-entrypoint.sh", "worker"]
 

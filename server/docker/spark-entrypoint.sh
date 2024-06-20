@@ -18,7 +18,7 @@ if [ "$SPARK_TYPE" == "master" ]; then
 
 	start_job_dispatcher.sh
 elif [ "$SPARK_TYPE" == "worker" ]; then
-	service ssh start
+	/usr/sbin/sshd -f ~/ssh/sshd_config && \
 	start-worker.sh spark://job-dispatcher-container:7077
 fi
 
