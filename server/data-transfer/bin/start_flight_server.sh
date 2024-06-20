@@ -10,6 +10,8 @@ LOG_FILE="${LOG_DIR}/flight_server_$(date +'%Y%m%d_%H%M%S').log"
 
 DEFAULT_OCTOPUS_LIB_DIR="/var/octopus/lib"
 LIB_DIR="${OCTOPUS_LIB_DIR:-$DEFAULT_OCTOPUS_LIB_DIR}"
+DEFAULT_ARROW_FLIGHT_SERVER="arrow-flight-server-container"
+ARROW_FLIGHT_HOST="${ARROW_FLIGHT_SERVER:-$DEFAULT_ARROW_FLIGHT_SERVER}"
 
-java --add-opens=java.base/java.nio=ALL-UNNAMED -cp $DEFAULT_OCTOPUS_LIB_DIR/octopus-server-1.0.0-beta.1-SNAPSHOT-jar-with-dependencies.jar com.sony.SparkFlightServer --host "arrow-flight-server" --port ${PORT_NUM} >> ${LOG_FILE} 2>&1 &
+java --add-opens=java.base/java.nio=ALL-UNNAMED -cp $DEFAULT_OCTOPUS_LIB_DIR/octopus-server-1.0.0-beta.1-SNAPSHOT-jar-with-dependencies.jar com.sony.SparkFlightServer --host $ARROW_FLIGHT_HOST --port ${PORT_NUM} >> ${LOG_FILE} 2>&1 &
 
