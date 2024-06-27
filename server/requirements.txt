@@ -3,3 +3,4 @@ pandas
 pyarrow
 numpy
 neo4j
+poetry
