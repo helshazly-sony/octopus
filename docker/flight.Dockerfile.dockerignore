@@ -1,1 +1,3 @@
-server/job-dispatcher
+server/*
+!server/data-transfer
+!server/requirements.txt
