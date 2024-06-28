@@ -1,73 +1,33 @@
-FROM python:3.10-bullseye as git
+FROM bitnami/java:17.0.11-12 as build
 
-RUN mkdir -p -m 0600 ~/.ssh && \
-    ssh-keyscan github.com >> ~/.ssh/known_hosts
+ENV OCTOPUS_LIB_DIR="/data-transfer/lib"
 
-WORKDIR /git
-RUN --mount=type=ssh,id=default git clone git@github.com:helshazly-sony/octopus.git
+COPY server/data-transfer /data-transfer
 
-FROM python:3.10-bullseye as arrow-flight-base
+WORKDIR /data-transfer
+RUN install_packages maven
+RUN ./build.sh
 
-# Install additional libraries
-RUN apt-get update && apt-get install -y \
-    curl \
-    vim \
-    lsof \
-    unzip \
-    rsync \
-    openjdk-17-jdk \
-    maven \
-    build-essential \
-    software-properties-common \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
 
-# Install poetry
-RUN pip3 install poetry
+FROM bitnami/java:17.0.11-12 as arrow-flight
 
-COPY conf/requirements.txt .
-RUN pip3 install -r requirements.txt 
-
-EXPOSE 8888
-
-ENV OCTOPUS_HOME="/home/octopus"
-ENV OCTOPUS_DATA_TRANSFER_HOME="${OCTOPUS_HOME}/server/data-transfer" 
+ENV OCTOPUS_HOME="/opt/octopus"
+ENV OCTOPUS_LIB_DIR="${OCTOPUS_HOME}/lib"
 ENV OCTOPUS_ARROW_FLIGHT_LOGS="${OCTOPUS_HOME}/logs"
-ENV OCTOPUS_LIB_DIR="/var/octopus/lib"
-ENV OCTOPUS_ARROW_FLIGHT_LOGS="${OCTOPUS_HOME}/logs/"
-ENV ARROW_FLIGHT_SERVER="arrow-flight-server-container"
-ENV PATH="${OCTOPUS_LIB_DIR}":"${OCTOPUS_DATA_TRANSFER_HOME}/bin":$PATH
 
-COPY entrypoints/arrow-entrypoint.sh .
-
-RUN chmod +x ./arrow-entrypoint.sh
-
-### Add non-root user
-RUN addgroup --gid 1000 octopus && \
-    adduser --uid 1000 --shell /bin/bash --system --gid 1000 octopus
-
-### Create Octopus User
-RUN chown -R 1000:1000 $OCTOPUS_HOME && \
-    mkdir -p $OCTOPUS_LIB_DIR && \
-    mkdir -p $OCTOPUS_ARROW_FLIGHT_LOGS && \
-    chown -R 1000:1000 $OCTOPUS_LIB_DIR
-
-RUN chown octopus:octopus /arrow-entrypoint.sh && \
-    chown -R octopus:octopus $OCTOPUS_ARROW_FLIGHT_LOGS
+RUN install_packages python3.11 python3-pip
 
 WORKDIR $OCTOPUS_HOME
-USER 1000
+COPY server ./server
+COPY --from=build /data-transfer/lib $OCTOPUS_LIB_DIR
 
-########################################
-### Arrow Flight Server
-########################################
-COPY --from=git --chown=1000 /git/octopus/server ${OCTOPUS_HOME}/server
+RUN rm -rf /usr/lib/python3.11/EXTERNALLY-MANAGED && \
+    pip3 install -r server/requirements.txt && \
+    mkdir -p -m 775 $OCTOPUS_ARROW_FLIGHT_LOGS
 
-WORKDIR $OCTOPUS_HOME/server/data-transfer/
+USER 1001
+EXPOSE 8888
 
-RUN touch ${OCTOPUS_ARROW_FLIGHT_LOGS}/container_blocker && \
-    ./build.sh
-
-ENTRYPOINT ["/arrow-entrypoint.sh"]
+ENTRYPOINT ["./server/data-transfer/bin/start_flight_server.sh"]
 
 
