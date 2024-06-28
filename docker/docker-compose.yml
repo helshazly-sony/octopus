@@ -66,17 +66,20 @@ services:
   #  volumes:
   #   - /home/hshazly/workspace/spark-worker-logs/:/opt/spark/logs/
 
-  # arrow-flight: 
-  #   container_name: arrow-flight-server-container
-  #   build:
-  #      context: .
-  #      dockerfile: dockerfiles/flight-server.Dockerfile
-  #   networks:
-  #     - app-network
-  #   ports:
-  #     - 8888:8888 # Arrow Flight Server Port
-  #   # volumes:
-  #   #   - /home/hshazly/workspace/arrow-flight-logs/:/tmp/
+  arrow-flight: 
+    container_name: arrow-flight-server-container
+    build:
+      context: ../.
+      dockerfile: docker/flight.Dockerfile
+    environment:
+      ARROW_FLIGHT_SERVER: "0.0.0.0"
+
+    networks:
+      - app-network
+    ports:
+      - 8888:8888 # Arrow Flight Server Port
+    # volumes:
+    #   - /home/hshazly/workspace/arrow-flight-logs/:/tmp/
 
 networks:
   app-network:
