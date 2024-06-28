@@ -22,6 +22,12 @@ RUN cp $OCTOPUS_HOME/server/job-dispatcher/bin/start-job-dispatcher.sh ./ && \
     sed -e '$ s/$/ \&/' $SPARK_HOME/sbin/start-history-server.sh > ./start-history-server.sh && \
     chmod +x ./start-history-server.sh
 
-    
-WORKDIR $OCTOPUS_HOME
 USER 1001
+
+EXPOSE 7077
+EXPOSE 8000
+EXPOSE 8080
+EXPOSE 18080
+
+WORKDIR $OCTOPUS_HOME
+
