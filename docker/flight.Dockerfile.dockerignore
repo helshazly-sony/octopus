@@ -1,0 +1,3 @@
+server/*
+!server/data-transfer
+!server/requirements.txt
